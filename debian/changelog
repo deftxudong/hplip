@@ -1,3 +1,10 @@
+hplip (3.16.10+repack0-1utopia1) experimental; urgency=medium
+
+  * Utopia Repository build.
+  * Force sudo usage on Debian. (LP: #1642331)
+
+ -- James Lu <bitflip3@gmail.com>  Mon, 28 Nov 2016 08:01:56 -0800
+
 hplip (3.16.10+repack0-1) unstable; urgency=medium
 
   * New upstream version 3.16.10
