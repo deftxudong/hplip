@@ -33,7 +33,7 @@ from . import pexpect
 PASSWORD_RETRY_COUNT = 3
 
 AUTH_TYPES ={'mepis':'su',
-             'debian':'su',
+             'debian':'sudo',
              'suse':'su',
              'mandriva':'su',
              'fedora':'su',
