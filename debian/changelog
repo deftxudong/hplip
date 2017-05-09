@@ -1,3 +1,10 @@
+hplip (3.16.11+repack0-3utopia1) unstable; urgency=medium
+
+  * Utopia Repository upload.
+  * Merge with Debian unstable.
+
+ -- James Lu <bitflip3@gmail.com>  Mon, 08 May 2017 18:17:51 -0700
+
 hplip (3.16.11+repack0-3) unstable; urgency=low
 
   [ Gaurav Sood ]
