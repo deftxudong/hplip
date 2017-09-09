@@ -1,17 +1,72 @@
+hplip (3.17.7+repack0-3) unstable; urgency=high
+
+  * Reintroduce ui5/devmgr5_base.py patching of self.retranslateUi
+    (Closes: #871917)
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 12 Aug 2017 22:16:35 -0400
+
+hplip (3.17.7+repack0-2) unstable; urgency=medium
+
+  * DebConf17 packaging cleanup
+
+  * Migrate to debhelper 10, cleanup debian/rules
+  * Cleanup maintainer script comments
+  * Simplify the python3 handling in d/rules
+  * Drop build-time lsb_release usage in favour of dpkg-vendor
+  * Drop --enable-udev-acl-rules configure flag, unused since 3.14.6
+  * Reorder debian/rules for doing the -dNOINTERPOLATE dance less times
+  * Bump Standards-Version to 4.0.0
+  * Revert the dh_pyppd package selection logic
+  * Cleanup the custom non-shipped-files list
+  * Add debian/not-installed for dh_missing already
+  * Remove single-debian-patch source local-option
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 05 Aug 2017 16:07:51 -0400
+
+hplip (3.17.7+repack0-1) unstable; urgency=medium
+
+  * New upstream 3.17.7
+    - Re-implementation of “hpps” filter in C
+    - Support for 14 HP printers
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 05 Aug 2017 02:48:34 +0200
+
+hplip (3.17.6+repack0-2) unstable; urgency=medium
+
+  [ Scott Kitterman ]
+  * Correct python3 build-depends to match debian/rules (Closes: #866948)
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 03 Jul 2017 08:24:53 +0200
+
+hplip (3.17.6+repack0-1) unstable; urgency=low
+
+  * New upstream 3.17.6
+    - Support for 53 HP printers
+    - DeskJet 3775 - scanner not found (LP: #1690515)
+    - Head alignment don't work (LP: #1690516)
+  * Refresh patches
+
+ -- Didier Raboud <odyx@debian.org>  Sun, 18 Jun 2017 17:34:17 +0200
+
+hplip (3.17.4+repack0-1) experimental; urgency=medium
+
+  * New upstream version 3.17.4
+    - Support for 32 HP LaserJet printers
+    - cups Filter Failed with HP Laserjet (LP: #1656348)
+    - HP OfficeJet Pro 7740:no tray choice (LP: #1649550)
+    - Encapsulator.cpp send 10000 bytes of 0X00 to the Printer before real PCL
+      commands (LP: #1648954)
+    - hpps has no error handling (LP: #1521134)
+  * Refresh patches
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 22 Apr 2017 08:50:53 +0200
+
 hplip (3.16.11+repack0-3utopia1) unstable; urgency=medium
 
   * Utopia Repository upload.
   * Merge with Debian unstable.
 
  -- James Lu <bitflip3@gmail.com>  Mon, 08 May 2017 18:17:51 -0700
-
-hplip (3.16.11+repack0-3) unstable; urgency=low
-
-  [ Gaurav Sood ]
-  * Fix handling of unicode filenames in sixext.py
-    (Closes: #861731, LP: #1480152)
-
- -- Didier Raboud <odyx@debian.org>  Thu, 04 May 2017 18:35:44 +0200
 
 hplip (3.16.11+repack0-2utopia1) unstable; urgency=medium
 

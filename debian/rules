@@ -1,11 +1,6 @@
 #!/usr/bin/make -f
-# debian/rules for hplip
-# GNU copyright 1997 to 1999 by Joey Hess.
-# Copyright (c) 2003 Torsten Landschoff <torsten@debian.org>
-# Copyright (c) 2004-2006 Henrique de Moraes Holschuh <hmh@debian.org>
 
-PACKAGE=hplip
-BASEPKG=hplip
+derives_from_ubuntu := $(shell (dpkg-vendor --derives-from Ubuntu && echo "yes") || echo "no")
 
 -include /usr/share/python3/python.mk
 ifeq (,$(py_sitename))
@@ -22,8 +17,6 @@ PYTHON=python3
 PYTHON_DEFAULT_VERSION:=$(shell py3versions -dv)
 PYTHON_SITENAME:=$(call py_sitename, $(PYTHON_DEFAULT_VERSION))
 
-
-DBGPKG:=$(BASEPKG)-dbg
 PKGTMP:=$(CURDIR)/debian/tmp
 PPDDIR:=$(PKGTMP)/usr/share/ppd
 
@@ -48,7 +41,7 @@ GZIP = gzip -n --best
 ##
 
 %:
-	dh $@ --buildsystem=autoconf --with autoreconf --with python3 --with pyppd
+	dh $@ --buildsystem=autoconf --with python3 --with pyppd
 
 override_dh_autoreconf:
 	dh_autoreconf --as-needed sh -- debian/autogen.sh
@@ -72,7 +65,6 @@ override_dh_clean:
 override_dh_auto_configure:
 	dh_auto_configure -- \
 		PYTHON="$(PYTHON)" \
-		HPLIP_PPD_PATH=/usr/share/ppd \
 		$(CONFFLAGS) \
 	 	--config-cache \
 		--docdir=\$${prefix}/share/doc/hplip \
@@ -97,8 +89,7 @@ override_dh_auto_configure:
 		--disable-qt3 \
 		--disable-qt4 \
 		--enable-qt5 \
-		--enable-policykit \
-		--enable-udev-acl-rules
+		--enable-policykit
 
 override_dh_auto_build:
 	# Compress various files before building, they are needed for the build, and were
@@ -115,9 +106,7 @@ override_dh_auto_build:
 	# Patch out retranslateUi call like upstream does
 	sed -i s/self.retranslateUi/#self.retranslateUi/ ui5/devmgr5_base.py
 
-
 	dh_auto_build
-
 
 ##
 ## Debian packaging
@@ -125,7 +114,7 @@ override_dh_auto_build:
 
 override_dh_install:
 	# Clean up libtool archives
-	find debian/tmp -name '*.la' -delete
+	find $(PKGTMP) -name '*.la' -delete
 
 	# Remove hpcups support for the HP Officejet Pro K550 as it is known
 	# to not work. This way hpijs (which works) will be used (Ubuntu bugs
@@ -134,22 +123,14 @@ override_dh_install:
 	rm $(PKGTMP)/usr/share/cups/drv/hpcups.drv
 	mv $(PKGTMP)/usr/share/cups/drv/hpcups.drv.new $(PKGTMP)/usr/share/cups/drv/hpcups.drv
 
-	# Modify all Ghostscript command lines to have the "-dNOINTERPOLATE"
-	# coomand line option. This makes rendering the pages much faster
-	perl -p -i -e "s/(\-sDEVICE=)/-dNOINTERPOLATE \1/" $(PKGTMP)/usr/share/cups/drv/hpijs.drv $(PKGTMP)/usr/lib/cups/filter/pstotiff
-
+ifeq ($(derives_from_ubuntu),yes)
 	# Install wrapper script for hp-plugin, to be called by update-notifier
 	# on udev signal (Ubuntu only)
-	if [ "`lsb_release -is 2>/dev/null`" = "Ubuntu" ]; then \
-		install -d $(CURDIR)/debian/hplip/usr/bin/; \
-		install -m 755 debian/local/scripts/hp-plugin-ubuntu $(CURDIR)/debian/hplip/usr/bin/; \
-	fi
-
+	install -d $(CURDIR)/debian/hplip/usr/bin/
+	install -m 755 debian/local/scripts/hp-plugin-ubuntu $(CURDIR)/debian/hplip/usr/bin/
+endif
 	# Install Apport hook
 	install -D -m 644 debian/local/apport-hook.py $(PKGTMP)/usr/share/apport/package-hooks/source_hplip.py
-
-	# Uncompress PPDs, this makes the package smaller for distribution
-	-find $(PPDDIR) -name '*.ppd.gz' | xargs gunzip -f
 
 	# Remove identical PPD files shipped under different names
 	( cd "$(PKGTMP)" && fdupes -r1q usr/share/ppd | while read s; do \
@@ -168,25 +149,20 @@ override_dh_install:
 			if readlink $$file | grep ".py"; then \
 				PYTHONPATH=../lib/python$(PYTHON_DEFAULT_VERSION)/$(PYTHON_SITENAME)/ \
 				HOME=./ \
-				LD_LIBRARY_PATH=../lib/$(DEB_HOST_MULTIARCH) python3 ./$$file --help-man > $(CURDIR)/$$file.1 ; \
+				LD_LIBRARY_PATH=../lib/$(DEB_HOST_MULTIARCH) $(PYTHON) ./$$file --help-man > $(CURDIR)/$$file.1 ; \
 			fi; \
 	    done \
 	)
 
-	# Correct Python interpreter path in all executables
+	# Correct Python interpreter path in all executables, and 'upgrade' it to $(PYTHON)
 	for file in ./debian/tmp/usr/bin/* ./debian/tmp/usr/lib/cups/*/*; do \
-	    perl -p -i -e 's:^\s*\#\!\s*/usr/bin/env\s+python.*:#!/usr/bin/python:' `readlink -f $$file`; \
-	done
-
-	# "Upgrade" Python interpreter path to Python3
-	for file in ./debian/tmp/usr/bin/* ./debian/tmp/usr/lib/cups/*/*; do \
-	    perl -p -i -e 's:^\s*\#\!\s*/usr/bin/python\b:#!/usr/bin/python3:' `readlink -f $$file`; \
+	    perl -p -i -e 's:^\s*\#\!\s*/usr/bin/env\s+python.*:#!/usr/bin/$(PYTHON):' `readlink -f $$file`; \
 	done
 
 	# Remove unneeded explicit calls of the Python interpreter to let the
 	# (upgraded) shebangs rule
 	for file in ./debian/tmp/*/udev/rules.d/*.rules; do \
-	    perl -p -i -e 's:/usr/bin/python\b\s*::' `readlink -f $$file`; \
+	    perl -p -i -e 's:/usr/bin/$(PYTHON)\b\s*::' `readlink -f $$file`; \
 	done
 
 	# Remove all *.pyc files, they do not need to be shipped with the
@@ -198,8 +174,6 @@ override_dh_install:
 	@cat debian/non-shipped-files.txt | \
 		( cd "$(PKGTMP)" && xargs -d '\n' -t -r rm -fv )
 
-# install arch-dependent packages specific files
-
 	# Remove stray #! lines on python libraries, and fix permissions
 	find "$(PKGTMP)/usr/share/hplip" -maxdepth 1 -mindepth 1 -type d -print0 | \
 		xargs -0 -r -i@ find @ -type f -name '*.py' | \
@@ -208,6 +182,7 @@ override_dh_install:
 			sed < "$$i" > "$$i.tmp" -e '/^#!/ {1 d}' && \
 			mv -f "$$i.tmp" "$$i" ; \
 		done
+
 	# executable-not-elf-or-script
 	chmod -x $(PKGTMP)/usr/share/hplip/installer/distros.dat
 
@@ -215,22 +190,16 @@ override_dh_install:
 	install -m 644 debian/*.desktop "$(PKGTMP)/usr/share/applications"
 
 	mkdir -p "$(PKGTMP)/etc/sane.d/dll.d"
-	install -m 644 debian/$(BASEPKG).sane "$(PKGTMP)/etc/sane.d/dll.d/$(PACKAGE)"
+	install -m 644 debian/hplip.sane "$(PKGTMP)/etc/sane.d/dll.d/hplip"
 
-	# Uncompress PPDs, this makes the package smaller for distribution
-	#-find "$(CURDIR)/debian/printer-driver-hpijs/usr/share/ppd/" -name '*.ppd.gz' | xargs gunzip -f
-	#-find "$(CURDIR)/debian/printer-driver-hpcups/usr/share/ppd/" -name '*.ppd.gz' | xargs gunzip -f
+	dh_install
 
 	# Modify all Ghostscript command lines to have the "-dNOINTERPOLATE"
 	# coomand line option. This makes rendering the pages much faster
-	perl -p -i -e "s/(\-sDEVICE=)/-dNOINTERPOLATE \1/" $(CURDIR)/debian/*/usr/share/ppd/hplip/HP/HP-Fax*.ppd
-
-	dh_install -a --list-missing
-
-	# Remove the Fax PPDs, we have handled them in the arch-dependent part
-	-find $(PPDDIR) -name '*Fax*.ppd*' | xargs rm
-
-	dh_install -i --list-missing
+	perl -p -i -e "s/(\-sDEVICE=)/-dNOINTERPOLATE \1/" \
+		$(CURDIR)/debian/*/usr/share/ppd/hplip/HP/HP-Fax*.ppd \
+		$(CURDIR)/debian/*/usr/share/cups/drv/hpijs.drv \
+		$(CURDIR)/debian/*/usr/lib/cups/filter/pstotiff
 
 	# Patch the PPDs for the hpijs-ppds package to use foomatic-rip
 	# as CUPS filter and not foomatic-rip-hplip. Also add
@@ -238,7 +207,9 @@ override_dh_install:
 	# by Ghostscript faster.
 	(if dh_listpackages | grep -q hpijs-ppds; then  \
 	  cd $(CURDIR)/debian/hpijs-ppds/usr/share/ppd/hplip/HP/ && \
-	  for ppd in *.ppd; do \
+	  for ppdgz in *.ppd.gz; do \
+	    gunzip -f $$ppdgz; \
+	    ppd=$$(basename $$ppdgz .gz);\
 	    perl -p -i -e 's/foomatic-rip-hplip/foomatic-rip/g' $$ppd; \
 	    perl -p -i -e "s/(\-sDEVICE=)/-dNOINTERPOLATE \1/" $$ppd; \
 	  done; fi \
@@ -250,11 +221,11 @@ override_dh_install:
 	fi
 
 override_dh_pyppd:
-	# Not sure why only that package
-	dh_pyppd -pprinter-driver-postscript-hp
+	# Don't compress the 4 Fax PPDs
+	dh_pyppd -Nprinter-driver-hpijs -Nprinter-driver-hpcups
 
 override_dh_strip:
-	dh_strip  --dbgsym-migration='$(DBGPKG) (<< 3.15.11+repack0-1~), hplip (<< 3.10.2-2ubuntu2)'
+	dh_strip  --dbgsym-migration='hplip-dbg (<< 3.15.11+repack0-1~), hplip (<< 3.10.2-2ubuntu2)'
 
 override_dh_makeshlibs:
 	dh_makeshlibs -plibsane-hpaio --noscripts

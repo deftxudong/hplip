@@ -1,4 +1,4 @@
-From 602e2d8fb42cf4b62bf245702f314fecf6a2227c Mon Sep 17 00:00:00 2001
+From e87ed0d30b8584105a76e899ba7213c5467d7f12 Mon Sep 17 00:00:00 2001
 From: Gaurav Sood <gaurav-sood@invalid-email.launchpad.net>
 Date: Thu, 4 May 2017 18:32:08 +0200
 Subject: Fix handling of unicode filenames in sixext.py
