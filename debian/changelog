@@ -1,3 +1,14 @@
+hplip (3.17.10+repack0-1utopia1) unstable; urgency=medium
+
+  * Utopia Repository release.
+  * Merge with Debian unstable. Remaining changes:
+    - Force sudo usage on Debian. (LP: #1642331, LP: #1547879)
+  * Rebuild for Python 3.6 and Qt 5.9.2 transitions.
+  * d/rules: force gzip compression in dh_builddeb to work around
+    https://github.com/smira/aptly/issues/655 (Debian #879718)
+
+ -- James Lu <bitflip3@gmail.com>  Fri, 27 Oct 2017 16:05:21 -0700
+
 hplip (3.17.10+repack0-1) unstable; urgency=medium
 
   * New upstream version 3.17.10
