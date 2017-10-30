@@ -257,3 +257,7 @@ get-orig-source:
 	git checkout debian/master ;\
 	git dpm record-new-upstream --rebase-patched ../hplip_$$urtag.orig.tar.xz $$urcommit ;\
 	git dpm update-patches -m "Merge upstream-repacked $$urtag version and refresh git-dpm patches"
+
+override_dh_builddeb:
+	# Temporary workaround for https://github.com/smira/aptly/issues/655
+	dh_builddeb -- -Zgzip
